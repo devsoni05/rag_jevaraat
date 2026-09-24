@@ -17,4 +17,7 @@ def home():
 
 @app.post("/ask")
 def ask_question(data: QueryRequest):
-    return {"answer": answer_question(data.query)}
+    try:
+        return {"answer": answer_question(data.query)}
+    except Exception as exc:
+        return {"answer": f"I could not process your request: {exc}"}

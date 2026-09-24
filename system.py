@@ -53,8 +53,20 @@ def answer_question(query: str) -> str:
             ),
         ]
     )
+
+    groq_api_key = os.getenv("GROQ_API_KEY")
+    if not groq_api_key:
+        raise RuntimeError("GROQ_API_KEY is missing from the environment.")
+
     model = ChatGroq(
-        model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"), temperature=0
+        model=os.getenv("GROQ_MODEL", "openai/gpt-oss-120b"),
+        temperature=0,
+        api_key=groq_api_key,
+        timeout=30,
+        max_retries=2,
     )
-    response = model.invoke(prompt.invoke({"context": context, "question": query}))
-    return str(response.content)
+    try:
+        response = model.invoke(prompt.invoke({"context": context, "question": query}))
+        return str(response.content)
+    except Exception as exc:  # pragma: no cover - exercised at runtime when upstream API fails
+        raise RuntimeError(f"The Groq model could not answer the query: {exc}") from exc
